@@ -22,12 +22,12 @@ public class SimpleJDBCRepository {
     private PreparedStatement ps;
     private Statement st;
 
-    private static final String CREATE_USER_SQL = "INSERT INTO users (firstname, lastname, age) VALUES(?, ?, ?)";
-    private static final String UPDATE_USER_SQL = "UPDATE users SET firstname = ?, lastname = ?, age = ? WHERE id = ?";
-    private static final String DELETE_USER_SQL = "DELETE FROM users WHERE id = ?";
-    private static final String FIND_USER_BY_ID_SQL = "SELECT * FROM users WHERE id = ?";
-    private static final String FIND_USER_BY_NAME_SQL = "SELECT * FROM users WHERE name = ?";
-    private static final String FIND_ALL_USER_SQL = "SELECT * FROM users";
+    private static final String CREATE_USER_SQL = "INSERT INTO myusers (firstname, lastname, age) VALUES(?, ?, ?)";
+    private static final String UPDATE_USER_SQL = "UPDATE myusers SET firstname = ?, lastname = ?, age = ? WHERE id = ?";
+    private static final String DELETE_USER_SQL = "DELETE FROM myusers WHERE id = ?";
+    private static final String FIND_USER_BY_ID_SQL = "SELECT * FROM myusers WHERE id = ?";
+    private static final String FIND_USER_BY_NAME_SQL = "SELECT * FROM myusers WHERE name = ?";
+    private static final String FIND_ALL_USER_SQL = "SELECT * FROM myusers";
 
     private static final String USER_NOT_EXISTS = "user does not exist";
 
