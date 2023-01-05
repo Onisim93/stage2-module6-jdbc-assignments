@@ -17,7 +17,7 @@ import java.util.List;
 @NoArgsConstructor
 public class SimpleJDBCRepository {
 
-    private DataSource dataSource;
+    private CustomDataSource dataSource;
     private Connection connection;
     private PreparedStatement ps;
     private Statement st;
