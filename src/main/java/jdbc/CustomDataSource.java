@@ -5,13 +5,15 @@ import javax.sql.DataSource;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Connection;
+import java.sql.ConnectionBuilder;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Logger;
 
@@ -19,58 +21,76 @@ import java.util.logging.Logger;
 @Setter
 public class CustomDataSource implements DataSource {
     private static volatile CustomDataSource instance;
-    private static volatile Properties properties;
-
-    private int loginTimeout;
+    private final CustomConnector connector = new CustomConnector();
     private PrintWriter logWriter;
-    private final CustomConnector connector;
+    private int loginTimeout = 0;
     private final String driver;
     private final String url;
     private final String name;
     private final String password;
-
-    static {
-        properties = new Properties();
-        try {
-            properties.load(Files.newInputStream(Path.of("app.properties")));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
+    private static final String PROPERTIES_PATH = "src/main/resources/app.properties";
+    private static final String PROPERTY_PASSWORD = "postgres.password";
+    private static final String PROPERTY_USERNAME = "postgres.name";
+    private static final String PROPERTY_URL = "postgres.url";
+    private static final String PROPERTY_DRIVER = "postgres.driver";
 
     private CustomDataSource(String driver, String url, String password, String name) {
         this.driver = driver;
         this.url = url;
         this.password = password;
         this.name = name;
-        connector = new CustomConnector();
     }
 
     public static CustomDataSource getInstance() {
         if (instance == null) {
-            instance = new CustomDataSource(properties.getProperty("driver"), properties.getProperty("url"), properties.getProperty("password"), properties.getProperty("name"));
+            synchronized (CustomDataSource.class) {
+                if (instance == null) {
+                    Map<String, String> properties = getProperties(PROPERTIES_PATH, PROPERTY_DRIVER, PROPERTY_URL,
+                            PROPERTY_USERNAME, PROPERTY_PASSWORD);
+                    instance = new CustomDataSource(properties.get(PROPERTY_DRIVER) ,properties.get(PROPERTY_URL),
+                            properties.get(PROPERTY_PASSWORD), properties.get(PROPERTY_USERNAME));
+                }
+            }
         }
         return instance;
     }
 
-    @Override
-    public Connection getConnection() {
-        return connector.getConnection(url);
+    private static Map<String, String> getProperties(String path, String... propName) {
+        Map<String, String> mapProperties = null;
+        try (InputStream propsStream = new FileInputStream(path)) {
+            Properties properties = new Properties();
+            properties.load(Files.newInputStream(Path.of(path)));
+            mapProperties = new HashMap<>();
+            for (String s : propName) {
+                mapProperties.put(s, properties.getProperty(s));
+            }
+            System.out.println(mapProperties.toString());
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return mapProperties;
     }
 
     @Override
-    public Connection getConnection(String username, String password) {
-        return connector.getConnection(url, username, password);
+    public Connection getConnection() throws SQLException {
+        return connector.getConnection(this.url, this.name, this.password);
+    }
+
+    @Override
+    public Connection getConnection(String username, String password) throws SQLException {
+        return connector.getConnection(this.url, username, password);
     }
 
     @Override
     public PrintWriter getLogWriter() throws SQLException {
-        return logWriter;
+        return this.logWriter;
     }
 
     @Override
     public void setLogWriter(PrintWriter out) throws SQLException {
-        this.logWriter = out;
+        this.logWriter = new PrintWriter(out);
     }
 
     @Override
@@ -85,7 +105,12 @@ public class CustomDataSource implements DataSource {
 
     @Override
     public Logger getParentLogger() throws SQLFeatureNotSupportedException {
-        throw  new SQLFeatureNotSupportedException();
+        throw new SQLFeatureNotSupportedException();
+    }
+
+    @Override
+    public ConnectionBuilder createConnectionBuilder() throws SQLException {
+        return DataSource.super.createConnectionBuilder();
     }
 
     @Override
