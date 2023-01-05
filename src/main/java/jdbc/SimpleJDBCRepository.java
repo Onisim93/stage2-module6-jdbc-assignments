@@ -173,7 +173,7 @@ public class SimpleJDBCRepository {
         }
     }
 
-    private void deleteUser(Long userId) {
+    public void deleteUser(Long userId) {
         try {
             connection = dataSource.getConnection();
             ps = connection.prepareStatement(deleteUser);
