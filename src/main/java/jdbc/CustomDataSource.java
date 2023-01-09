@@ -57,9 +57,9 @@ public class CustomDataSource implements DataSource {
 
     private static Map<String, String> getProperties(String path, String... propName) {
         Map<String, String> mapProperties = null;
-        try {
+        try (InputStream is = Files.newInputStream(Path.of(path))) {
             Properties properties = new Properties();
-            properties.load(Files.newInputStream(Path.of(path)));
+            properties.load(is);
             mapProperties = new HashMap<>();
             for (String s : propName) {
                 mapProperties.put(s, properties.getProperty(s));
