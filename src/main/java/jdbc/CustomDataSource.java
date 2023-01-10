@@ -6,8 +6,6 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.ConnectionBuilder;
 import java.sql.SQLException;
@@ -57,13 +55,16 @@ public class CustomDataSource implements DataSource {
 
     private static Map<String, String> getProperties(String path, String... propName) {
         Map<String, String> mapProperties = null;
-        try (InputStream is = Files.newInputStream(Path.of(path))) {
+        try (InputStream propsStream = new FileInputStream(path)) {
             Properties properties = new Properties();
-            properties.load(is);
+            properties.load(CustomDataSource.class.getClassLoader().getResourceAsStream("app.properties"));
             mapProperties = new HashMap<>();
             for (String s : propName) {
                 mapProperties.put(s, properties.getProperty(s));
             }
+            System.out.println(mapProperties.toString());
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
